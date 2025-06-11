@@ -235,10 +235,15 @@ function init() {
         document.getElementById('containerHeight').value = result.height.toFixed(2);
         document.getElementById('containerLength').value = result.length.toFixed(2);
 
-        // Hiển thị tên xe/container đã chọn
-        document.getElementById('containerTypeInfo').textContent = `Đã chọn: ${result.name}`;
+        // Hiển thị chi tiết container đã chọn
+        document.getElementById('containerTypeInfo').innerHTML = `
+          <b>Đã chọn:</b> ${result.name} <br>
+          <b>Kích thước:</b> ${result.width} x ${result.height} x ${result.length} (m) <br>
+          <b>Trọng tải tối đa:</b> ${result.maxWeight} kg <br>
+          <b>Tổng khối lượng hàng:</b> ${result.totalWeight} kg
+        `;
 
-        showModal('Thành Công', `Đã tìm được container tối ưu: ${result.name} (${result.width.toFixed(2)} x ${result.height.toFixed(2)} x ${result.length.toFixed(2)} m)`, 'success');
+        showModal('Thành Công', `Đã tìm được container tối ưu: ${result.name} (${result.width} x ${result.height} x ${result.length} m)`, 'success');
         updateContainerVisualization();
       } else {
         showModal('Lỗi', 'Không tìm được container phù hợp!', 'danger');
@@ -414,6 +419,7 @@ function updateBoxList() {
       <td><input type="number" class="form-control form-control-sm" value="${b.length}" min="0.1" step="0.1" onchange="updateBox(${i}, 'length', this.value)" /></td>
       <td><input type="number" class="form-control form-control-sm" value="${b.quantity}" min="1" step="1" onchange="updateBox(${i}, 'quantity', this.value)" /></td>
       <td><input type="color" class="form-control form-control-sm" value="${color}" onchange="updateBox(${i}, 'color', this.value)" /></td>
+      <td><input type="number" class="form-control form-control-sm" value="${b.weight || ''}" min="0" step="any" onchange="updateBox(${i}, 'weight', this.value)" /></td>
       <td><button class="btn btn-danger btn-sm" onclick="removeBox(${i})">Xóa</button></td>
     `;
   });
@@ -521,3 +527,16 @@ if (result) {
 window.boxes = boxes;
 window.updateBoxList = updateBoxList;
 window.updateBoxVisualization = updateBoxVisualization;
+
+// Removed duplicate declaration of boxes to avoid redeclaration error
+// If you need to update boxes from DOM, use the existing boxes array and update its contents accordingly.
+document.querySelectorAll('.box-row').forEach(row => {
+  boxes.push({
+    width: parseFloat(row.querySelector('[name="boxWidth"]').value),
+    height: parseFloat(row.querySelector('[name="boxHeight"]').value),
+    length: parseFloat(row.querySelector('[name="boxLength"]').value),
+    quantity: parseInt(row.querySelector('[name="boxQuantity"]').value, 10),
+    color: row.querySelector('[name="boxColor"]').value,
+    weight: parseFloat(row.querySelector('[name="boxWeight"]').value) || 0 // Lấy khối lượng
+  });
+});
