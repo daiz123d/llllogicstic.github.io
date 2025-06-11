@@ -243,6 +243,7 @@
                       <th>Chiều Dài (m)</th>
                       <th>Số Lượng</th>
                       <th>Màu</th>
+                      <th>Khối lượng (kg)</th>
                       <th>Hành Động</th>
                     </tr>
                   </thead>
@@ -373,6 +374,10 @@
               <label for="boxColor" class="form-label">Màu hộp</label>
               <input type="color" class="form-control" id="boxColor" value="#${Math.floor(Math.random()*16777215).toString(16).padStart(6, '0')}" />
             </div>
+            <div class="mb-3">
+              <label for="boxWeight" class="form-label">Khối lượng (kg)</label>
+              <input type="number" class="form-control" id="boxWeight" min="0" step="0.01" value="1" required>
+            </div>
           </form>
         </div>
         <div class="modal-footer">
@@ -396,14 +401,15 @@ document.addEventListener('DOMContentLoaded', function() {
       const length = parseFloat(document.getElementById('boxLength').value);
       const quantity = parseInt(document.getElementById('boxQuantity').value) || 1;
       const color = document.getElementById('boxColor').value || '#ff0000';
+      const weight = parseFloat(document.getElementById('boxWeight').value) || 1;
       if (width > 0 && height > 0 && length > 0 && quantity > 0) {
         // Thêm vào mảng boxes của main.js
         if (window.boxes) {
-          window.boxes.push({ width, height, length, quantity, color });
+          window.boxes.push({ width, height, length, quantity, color, weight });
           if (window.updateBoxList) window.updateBoxList();
           if (window.updateBoxVisualization) window.updateBoxVisualization();
         } else if (window.main && window.main.boxes) {
-          window.main.boxes.push({ width, height, length, quantity, color });
+          window.main.boxes.push({ width, height, length, quantity, color, weight });
           if (window.main.updateBoxList) window.main.updateBoxList();
           if (window.main.updateBoxVisualization) window.main.updateBoxVisualization();
         }
