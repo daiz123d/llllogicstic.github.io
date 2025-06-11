@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Xếp Hộp 3D - Logistics</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <!-- CSS tùy chỉnh -->
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    :root {
+      --primary-color: #4361ee;
+      --secondary-color: #3f37c9;
+      --light-color: #f8f9fa;
+      --dark-color: #212529;
+      --success-color: #4cc9f0;
+      --warning-color: #f8961e;
+      --danger-color: #f94144;
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f5f7fb;
+      overflow-x: hidden;
+    }
+    .sidebar {
+      min-height: 100vh;
+      background: linear-gradient(180deg, var(--primary-color), var(--secondary-color));
+      color: white;
+      transition: all 0.3s;
+      box-shadow: 4px 0 10px rgba(0, 0, 0, 0.1);
+    }
+    .sidebar .nav-link {
+      color: rgba(255, 255, 255, 0.8);
+      margin-bottom: 5px;
+      border-radius: 5px;
+      padding: 10px 15px;
+      transition: all 0.3s;
+    }
+    .sidebar .nav-link:hover {
+      color: white;
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+    .sidebar .nav-link.active {
+      color: white;
+      background-color: rgba(255, 255, 255, 0.2);
+    }
+    .sidebar .nav-link i {
+      margin-right: 10px;
+      width: 20px;
+      text-align: center;
+    }
+    .logo {
+      padding: 20px 15px;
+      margin-bottom: 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .logo h3 {
+      font-weight: 700;
+      margin-bottom: 0;
+    }
+    .main-content {
+      padding: 20px;
+      width: 100%;
+    }
+    .card {
+      border: none;
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+      margin-bottom: 20px;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+    .card-header {
+      background-color: white;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+      font-weight: 600;
+      border-radius: 10px 10px 0 0 !important;
+    }
+    .threeD-container {
+      width: 100%;
+      height: 400px;
+      background-color: #e9ecef;
+      border-radius: 8px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    .threeD-container::before {
+    
+      color: #6c757d;
+      font-size: 18px;
+      font-weight: 500;
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%,-50%);
+      pointer-events: none;
+    }
+    .btn-primary {
+      background-color: var(--primary-color);
+      border-color: var(--primary-color);
+    }
+    .btn-primary:hover {
+      background-color: var(--secondary-color);
+      border-color: var(--secondary-color);
+    }
+    .btn-danger {
+      background-color: var(--danger-color);
+      border-color: var(--danger-color);
+    }
+    .btn-success {
+      background-color: var(--success-color);
+      border-color: var(--success-color);
+    }
+    @media (max-width: 768px) {
+      .sidebar {
+        min-height: auto;
+        width: 100%;
+      }
+      .main-content {
+        padding: 15px;
+      }
+    }
+  </style>
+  <!-- Three.js -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.122.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.122.0/examples/jsm/controls/OrbitControls.js"></script>
+  <!-- SheetJS để xuất Excel -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+  <div class="d-flex">
+    <!-- Sidebar -->
+    <div class="sidebar flex-shrink-0 p-3" style="width: 280px;">
+      <div class="logo">
+        <h3><i class="fas fa-boxes me-2"></i>Box3D Manager</h3>
+      </div>
+      <ul class="nav flex-column">
+        <li class="nav-item">
+          <a class="nav-link active" href="#">
+            <i class="fas fa-tachometer-alt"></i> Trang chủ
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#" id="dashboardLink">
+            <i class="fas fa-cube"></i> Bảng Điều Khiển
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#" id="containerInfoLink">
+            <i class="fas fa-info-circle"></i> Thông Tin Container
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#" id="boxMgmtLink">
+            <i class="fas fa-box"></i> Quản Lý Hộp
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="tracking.html" id="trackingLink">
+            <i class="fas fa-truck"></i> Theo Dõi
+          </a>
+        </li>
+        <li class="nav-item mt-4">
+          <a class="nav-link" href="#">
+            <i class="fas fa-sign-out-alt"></i> Đăng xuất
+          </a>
+        </li>
+      </ul>
+    </div>
+    <!-- Main Content -->
+    <div class="main-content">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">Dashboard Xếp Hộp 3D</h2>
+        <div>
+          <button class="btn btn-danger me-2" id="resetBtn">
+            <i class="fas fa-undo me-1"></i> Đặt Lại
+          </button>
+          <button class="btn btn-success" id="exportBoxBtn">
+            <i class="fas fa-file-csv me-1"></i> Xuất Hộp
+          </button>
+        </div>
+      </div>
+      <!-- 3D Viewer -->
+      <div class="card">
+        <div class="card-header">
+          <i class="fas fa-box-open me-2"></i>Mô phỏng xếp hộp 3D
+        </div>
+        <div class="card-body p-0">
+          <!-- Cụm nút tua từng thùng -->
+          <div class="d-flex justify-content-center my-2" id="step-controls">
+            <button type="button" id="stepPrevBtn" class="btn btn-outline-secondary mx-1"><i class="fas fa-step-backward"></i></button>
+            <button type="button" id="stepPauseBtn" class="btn btn-outline-danger mx-1"><i class="fas fa-pause"></i></button>
+            <button type="button" id="stepNextBtn" class="btn btn-outline-primary mx-1"><i class="fas fa-step-forward"></i></button>
+          </div>
+          <div id="threeD-container" class="threeD-container"></div>
+        </div>
+      </div>
+      <!-- Form nhập liệu -->
+      <div class="card">
+        <div class="card-header">
+          <i class="fas fa-list me-2"></i>Nhập thông tin xếp hộp
+        </div>
+        <div class="card-body">
+          <form id="binPackingForm" novalidate>
+            <div class="mb-4">
+              <h5>Kích Thước Container</h5>
+              <div class="row g-3">
+                <div class="col-md-4">
+                  <label for="containerWidth" class="form-label">Chiều Rộng (m)</label>
+                  <input type="number" class="form-control" id="containerWidth" value="5" min="0.1" step="0.1" required />
+                  <div class="invalid-feedback">Vui lòng nhập số dương hợp lệ.</div>
+                </div>
+                <div class="col-md-4">
+                  <label for="containerHeight" class="form-label">Chiều Cao (m)</label>
+                  <input type="number" class="form-control" id="containerHeight" value="3" min="0.1" step="0.1" required />
+                  <div class="invalid-feedback">Vui lòng nhập số dương hợp lệ.</div>
+                </div>
+                <div class="col-md-4">
+                  <label for="containerLength" class="form-label">Chiều Dài (m)</label>
+                  <input type="number" class="form-control" id="containerLength" value="4" min="0.1" step="0.1" required />
+                  <div class="invalid-feedback">Vui lòng nhập số dương hợp lệ.</div>
+                </div>
+              </div>
+            </div>
+            <div class="mb-4">
+              <h5>Hộp</h5>
+              <div class="table-responsive">
+                <table class="table table-bordered table-sm">
+                  <thead class="table-primary">
+                    <tr>
+                      <th>Chiều Rộng (m)</th>
+                      <th>Chiều Cao (m)</th>
+                      <th>Chiều Dài (m)</th>
+                      <th>Số Lượng</th>
+                      <th>Màu</th>
+                      <th>Hành Động</th>
+                    </tr>
+                  </thead>
+                  <tbody id="boxList"></tbody>
+                </table>
+              </div>
+              <button type="button" id="addBoxBtn" class="btn btn-outline-primary mt-2">
+                <i class="fas fa-plus"></i> Thêm Hộp
+              </button>
+            </div>
+            <div class="d-flex gap-2">
+              <button type="submit" id="submitBtn" class="btn btn-primary">Xếp Hộp</button>
+              <button type="button" id="autoContainerBtn" class="btn btn-warning">Tìm Container Tối Ưu</button>
+              <button type="button" id="resetBtn" class="btn btn-secondary">Đặt Lại</button>
+            </div>
+          </form>
+          <div id="result" class="mt-3 alert alert-info" style="display: none;"></div>
+        </div>
+      </div>
+      <!-- Thông Tin Container (Kết Quả Xếp Hộp) -->
+      <div id="containerInfo" class="card mb-4 shadow-sm" style="display: none;">
+        <div class="card-body">
+          <h3 class="card-title">Kết Quả Xếp Hộp</h3>
+          <div class="table-responsive">
+            <table class="table table-striped table-hover">
+              <thead class="table-primary">
+                <tr>
+                  <th>Hộp #</th>
+                  <th>Chiều Rộng (m)</th>
+                  <th>Chiều Cao (m)</th>
+                  <th>Chiều Dài (m)</th>
+                  <th>Vị Trí (X, Y, Z)</th>
+                </tr>
+              </thead>
+              <tbody id="packedBoxesTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <!-- Packing Steps -->
+      <div class="card" id="packing-steps">
+        <div class="card-header">
+          <i class="fas fa-list-ol me-2"></i>Cách xếp hộp
+        </div>
+        <div class="card-body">
+          <div class="step d-flex mb-2">
+            <div class="step-number bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width:30px;height:30px;">1</div>
+            <div>
+              <h6>Phân tích kích thước</h6>
+              <p class="mb-0">Hệ thống sẽ phân tích kích thước của tất cả các hộp cần xếp để tối ưu không gian container.</p>
+            </div>
+          </div>
+          <div class="step d-flex mb-2">
+            <div class="step-number bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width:30px;height:30px;">2</div>
+            <div>
+              <h6>Sắp xếp theo trọng lượng</h6>
+              <p class="mb-0">Các hộp nặng hơn sẽ được ưu tiên xếp ở dưới để đảm bảo tính ổn định.</p>
+            </div>
+          </div>
+          <div class="step d-flex mb-2">
+            <div class="step-number bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width:30px;height:30px;">3</div>
+            <div>
+              <h6>Tối ưu không gian</h6>
+              <p class="mb-0">Thuật toán sẽ sắp xếp các hộp để tận dụng tối đa không gian container, giảm thiểu khoảng trống.</p>
+            </div>
+          </div>
+          <div class="step d-flex mb-2">
+            <div class="step-number bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width:30px;height:30px;">4</div>
+            <div>
+              <h6>Kiểm tra độ ổn định</h6>
+              <p class="mb-0">Hệ thống kiểm tra để đảm bảo cách xếp hộp ổn định trong quá trình vận chuyển.</p>
+            </div>
+          </div>
+          <div class="step d-flex mb-2">
+            <div class="step-number bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width:30px;height:30px;">5</div>
+            <div>
+              <h6>Xuất kết quả</h6>
+              <p class="mb-0">Kết quả xếp hộp có thể xuất ra file CSV hoặc xem trực quan trong mô phỏng 3D.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="containerTypeInfo" class="alert alert-success mt-2"></div>
+    </div>
+  </div>
+  <!-- Modal cho Thông Báo -->
+  <div class="modal fade" id="notificationModal" tabindex="-1" aria-labelledby="notificationModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title" id="notificationModalLabel">Thông Báo</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div id="notificationMessage"></div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Modal Thêm Hộp -->
+  <div class="modal fade" id="addBoxModal" tabindex="-1" aria-labelledby="addBoxModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="addBoxModalLabel">Thêm hộp mới</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="addBoxForm">
+            <div class="mb-3">
+              <label for="boxWidth" class="form-label">Chiều Rộng (m)</label>
+              <input type="number" class="form-control" id="boxWidth" min="0.01" step="0.01" required>
+            </div>
+            <div class="mb-3">
+              <label for="boxHeight" class="form-label">Chiều Cao (m)</label>
+              <input type="number" class="form-control" id="boxHeight" min="0.01" step="0.01" required>
+            </div>
+            <div class="mb-3">
+              <label for="boxLength" class="form-label">Chiều Dài (m)</label>
+              <input type="number" class="form-control" id="boxLength" min="0.01" step="0.01" required>
+            </div>
+            <div class="mb-3">
+              <label for="boxQuantity" class="form-label">Số Lượng</label>
+              <input type="number" class="form-control" id="boxQuantity" min="1" step="1" value="1" required>
+            </div>
+            <div class="mb-3">
+              <label for="boxColor" class="form-label">Màu hộp</label>
+              <input type="color" class="form-control" id="boxColor" value="#${Math.floor(Math.random()*16777215).toString(16).padStart(6, '0')}" />
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+          <button type="button" class="btn btn-primary" id="confirmAddBoxBtn">Thêm hộp</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script type="module" src="./src/main.js"></script>
+  <script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Xử lý nút xác nhận thêm hộp trong modal
+  const confirmBtn = document.getElementById('confirmAddBoxBtn');
+  if (confirmBtn) {
+    confirmBtn.onclick = function() {
+      const width = parseFloat(document.getElementById('boxWidth').value);
+      const height = parseFloat(document.getElementById('boxHeight').value);
+      const length = parseFloat(document.getElementById('boxLength').value);
+      const quantity = parseInt(document.getElementById('boxQuantity').value) || 1;
+      const color = document.getElementById('boxColor').value || '#ff0000';
+      if (width > 0 && height > 0 && length > 0 && quantity > 0) {
+        // Thêm vào mảng boxes của main.js
+        if (window.boxes) {
+          window.boxes.push({ width, height, length, quantity, color });
+          if (window.updateBoxList) window.updateBoxList();
+          if (window.updateBoxVisualization) window.updateBoxVisualization();
+        } else if (window.main && window.main.boxes) {
+          window.main.boxes.push({ width, height, length, quantity, color });
+          if (window.main.updateBoxList) window.main.updateBoxList();
+          if (window.main.updateBoxVisualization) window.main.updateBoxVisualization();
+        }
+        document.getElementById('addBoxForm').reset();
+        const modal = bootstrap.Modal.getInstance(document.getElementById('addBoxModal'));
+        modal.hide();
+      } else {
+        alert('Vui lòng nhập đầy đủ và hợp lệ các thông tin hộp!');
+      }
+    };
+  }
+});
+document.addEventListener('DOMContentLoaded', function() {
+  const addBoxBtn = document.getElementById('addBoxBtn');
+  if (addBoxBtn) {
+    addBoxBtn.onclick = function() {
+      // Thêm hộp mặc định 1x1x1 số lượng 1
+      if (window.boxes) {
+        window.boxes.push({ width: 1, height: 1, length: 1, quantity: 1 });
+        if (window.updateBoxList) window.updateBoxList();
+        if (window.updateBoxVisualization) window.updateBoxVisualization();
+      }
+    };
+  }
+});
+</script>
+</body>
+</html>
