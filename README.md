@@ -1,2 +1,2 @@
-# logicstic.github.io-
-# website_logicstic.github.io
+# logicstic.github.io
+
