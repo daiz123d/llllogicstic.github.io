@@ -244,6 +244,7 @@
                       <th>Số Lượng</th>
                       <th>Màu</th>
                       <th>Khối lượng (kg)</th>
+                      <th>Được xếp chồng</th>
                       <th>Hành Động</th>
                     </tr>
                   </thead>
@@ -378,6 +379,10 @@
               <label for="boxWeight" class="form-label">Khối lượng (kg)</label>
               <input type="number" class="form-control" id="boxWeight" min="0" step="0.01" value="1" required>
             </div>
+            <div class="mb-3">
+              <label for="boxStackable" class="form-label">Có thể xếp chồng lên nhau</label>
+              <input type="checkbox" class="form-check-input" id="boxStackable" checked>
+            </div>
           </form>
         </div>
         <div class="modal-footer">
@@ -402,14 +407,15 @@ document.addEventListener('DOMContentLoaded', function() {
       const quantity = parseInt(document.getElementById('boxQuantity').value) || 1;
       const color = document.getElementById('boxColor').value || '#ff0000';
       const weight = parseFloat(document.getElementById('boxWeight').value) || 1;
+      const stackable = document.getElementById('boxStackable').checked;
       if (width > 0 && height > 0 && length > 0 && quantity > 0) {
         // Thêm vào mảng boxes của main.js
         if (window.boxes) {
-          window.boxes.push({ width, height, length, quantity, color, weight });
+          window.boxes.push({ width, height, length, quantity, color, weight, stackable });
           if (window.updateBoxList) window.updateBoxList();
           if (window.updateBoxVisualization) window.updateBoxVisualization();
         } else if (window.main && window.main.boxes) {
-          window.main.boxes.push({ width, height, length, quantity, color, weight });
+          window.main.boxes.push({ width, height, length, quantity, color, weight, stackable });
           if (window.main.updateBoxList) window.main.updateBoxList();
           if (window.main.updateBoxVisualization) window.main.updateBoxVisualization();
         }
