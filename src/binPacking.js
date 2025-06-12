@@ -175,19 +175,19 @@ export function packBoxes(containerWidth, containerHeight, containerLength, boxe
                 y: space.y,
                 z: space.z,
                 width: space.width - orientation.width,
-                height: orientation.height,
-                length: orientation.length
+                height: space.height,
+                length: space.length
             });
         }
         // Phía trên hộp vừa đặt
-        if (space.height - orientation.height > 0) {
+        if (space.height - orientation.height > 0 && box.stackable !== false) {
             newSpaces.push({
                 x: space.x,
                 y: space.y + orientation.height,
                 z: space.z,
-                width: space.width,
+                width: space.width, // mở rộng toàn bộ chiều rộng của không gian gốc
                 height: space.height - orientation.height,
-                length: orientation.length
+                length: space.length // mở rộng toàn bộ chiều dài của không gian gốc
             });
         }
         // Phía sau hộp vừa đặt
@@ -196,8 +196,8 @@ export function packBoxes(containerWidth, containerHeight, containerLength, boxe
                 x: space.x,
                 y: space.y,
                 z: space.z + orientation.length,
-                width: space.width,
-                height: space.height,
+                width: orientation.width,
+                height: orientation.height,
                 length: space.length - orientation.length
             });
         }
