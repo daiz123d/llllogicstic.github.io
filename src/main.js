@@ -168,7 +168,7 @@ function init() {
 
   // Sự kiện nút Thêm Hộp
   document.getElementById('addBoxBtn').addEventListener('click', () => {
-    boxes.push({ width: 1, height: 1, length: 1, quantity: 1 });
+    boxes.push({ width: 1, height: 1, length: 1, quantity: 1, stackable: true }); // Mặc định được xếp chồng
     updateBoxList();
     updateBoxVisualization();
   });
@@ -420,6 +420,9 @@ function updateBoxList() {
       <td><input type="number" class="form-control form-control-sm" value="${b.quantity}" min="1" step="1" onchange="updateBox(${i}, 'quantity', this.value)" /></td>
       <td><input type="color" class="form-control form-control-sm" value="${color}" onchange="updateBox(${i}, 'color', this.value)" /></td>
       <td><input type="number" class="form-control form-control-sm" value="${b.weight || ''}" min="0" step="any" onchange="updateBox(${i}, 'weight', this.value)" /></td>
+      <td class="text-center">
+        <input type="checkbox" name="boxStackable" ${b.stackable !== false ? 'checked' : ''} onchange="updateBox(${i}, 'stackable', this.checked)" />
+      </td>
       <td><button class="btn btn-danger btn-sm" onclick="removeBox(${i})">Xóa</button></td>
     `;
   });
@@ -427,15 +430,17 @@ function updateBoxList() {
 
 // Cập nhật thông tin hộp
 window.updateBox = (i, prop, val) => {
-  if (prop === 'color') {
+  if (prop === 'stackable') {
+    boxes[i][prop] = val === true || val === 'true' || val === 'on'; // Sửa lại cho chắc chắn là boolean
+  } else if (prop === 'color') {
     boxes[i][prop] = val;
   } else {
-    const value = parseFloat(val);
-    if (isNaN(value) || value <= 0) {
+    const numValue = parseFloat(val);
+    if (isNaN(numValue) || numValue <= 0) {
       showModal('Lỗi', 'Vui lòng nhập giá trị dương hợp lệ.', 'danger');
       return;
     }
-    boxes[i][prop] = value;
+    boxes[i][prop] = numValue;
   }
   updateBoxList();
   updateBoxVisualization();
@@ -528,15 +533,37 @@ window.boxes = boxes;
 window.updateBoxList = updateBoxList;
 window.updateBoxVisualization = updateBoxVisualization;
 
-// Removed duplicate declaration of boxes to avoid redeclaration error
-// If you need to update boxes from DOM, use the existing boxes array and update its contents accordingly.
-document.querySelectorAll('.box-row').forEach(row => {
-  boxes.push({
-    width: parseFloat(row.querySelector('[name="boxWidth"]').value),
-    height: parseFloat(row.querySelector('[name="boxHeight"]').value),
-    length: parseFloat(row.querySelector('[name="boxLength"]').value),
-    quantity: parseInt(row.querySelector('[name="boxQuantity"]').value, 10),
-    color: row.querySelector('[name="boxColor"]').value,
-    weight: parseFloat(row.querySelector('[name="boxWeight"]').value) || 0 // Lấy khối lượng
-  });
-});
+function addBox() {
+    const row = document.createElement('tr');
+    row.className = 'box-row';
+    row.innerHTML = `
+        <td><input type="number" class="form-control form-control-sm" name="boxWidth" value="1" min="0.1" step="0.1" required /></td>
+        <td><input type="number" class="form-control form-control-sm" name="boxHeight" value="1" min="0.1" step="0.1" required /></td>
+        <td><input type="number" class="form-control form-control-sm" name="boxLength" value="1" min="0.1" step="0.1" required /></td>
+        <td><input type="number" class="form-control form-control-sm" name="boxQuantity" value="1" min="1" step="1" required /></td>
+        <td><input type="color" class="form-control form-control-sm" name="boxColor" /></td>
+        <td><input type="number" class="form-control form-control-sm" name="boxWeight" value="0" min="0" step="any" /></td>
+        <td class="text-center">
+            <input type="checkbox" name="boxStackable" /> <!-- Mặc định là không được xếp chồng -->
+        </td>
+        <td><button class="btn btn-danger btn-sm" onclick="removeBox(this)">Xóa</button></td>
+    `;
+    document.getElementById('boxList').appendChild(row);
+}
+
+function getBoxesFromForm() {
+    const boxes = [];
+    document.querySelectorAll('.box-row').forEach(row => {
+        boxes.push({
+            width: parseFloat(row.querySelector('[name="boxWidth"]').value),
+            height: parseFloat(row.querySelector('[name="boxHeight"]').value),
+            length: parseFloat(row.querySelector('[name="boxLength"]').value),
+            quantity: parseInt(row.querySelector('[name="boxQuantity"]').value, 10),
+            color: row.querySelector('[name="boxColor"]').value,
+            weight: parseFloat(row.querySelector('[name="boxWeight"]').value) || 0,
+            stackable: row.querySelector('[name="boxStackable"]').checked // Đảm bảo lấy giá trị boolean
+        });
+    });
+    return boxes;
+}
+

@@ -48,7 +48,13 @@ export function packBoxes(containerWidth, containerHeight, containerLength, boxe
     const allBoxes = [];
     boxes.forEach(box => { // Lặp qua từng loại hộp
         for (let i = 0; i < box.quantity; i++) { // Thêm từng hộp đơn lẻ vào mảng
-            allBoxes.push({ width: box.width, height: box.height, length: box.length, color: box.color }); // Lưu kích thước và màu
+            allBoxes.push({
+                width: box.width,
+                height: box.height,
+                length: box.length,
+                color: box.color,
+                stackable: box.stackable // Thêm thuộc tính stackable
+            });
         }
     });
 
@@ -185,9 +191,9 @@ export function packBoxes(containerWidth, containerHeight, containerLength, boxe
                 x: space.x,
                 y: space.y + orientation.height,
                 z: space.z,
-                width: space.width, // mở rộng toàn bộ chiều rộng của không gian gốc
+                width: space.width,
                 height: space.height - orientation.height,
-                length: space.length // mở rộng toàn bộ chiều dài của không gian gốc
+                length: space.length
             });
         }
         // Phía sau hộp vừa đặt
